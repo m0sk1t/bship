@@ -7,6 +7,12 @@ export const makeShot = (x, y, hit) => ({
   type: type.MAKE_SHOT,
 });
 
+export const addShip = (ship, positions) => ({
+  ship,
+  positions,
+  type: type.ADD_SHIP,
+});
+
 export const sinkShip = (iShip) => ({
   iShip,
   type: type.SINK_SHIP,
@@ -23,6 +29,6 @@ export const gameOver = (over) => ({
   type: type.GAME_OVER,
 });
 
-export const gameReset = (over) => ({
+export const gameReset = () => ({
   type: type.GAME_RESET,
 });

@@ -1,3 +1,4 @@
+export const ADD_SHIP = 'ADD_SHIP';
 export const MAKE_SHOT = 'MAKE_SHOT';
 export const GAME_OVER = 'GAME_OVER';
 export const SINK_SHIP = 'SINK_SHIP';

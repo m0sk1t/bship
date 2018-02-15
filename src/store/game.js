@@ -8,8 +8,9 @@ const game = (state = initialState, action) => {
       return { over: action.over };
     }
     case GAME_RESET:
-    default:
       return initialState;
+    default:
+      return state;
   }
 }
 

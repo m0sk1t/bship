@@ -1,4 +1,4 @@
-import { SINK_SHIP_PART, GAME_RESET } from '../actions/types';
+import { SINK_SHIP_PART, GAME_RESET, ADD_SHIP } from '../actions/types';
 
 const initialState = {
   "shipTypes": {
@@ -19,14 +19,22 @@ const initialState = {
 
 const ships = (state = initialState, action) => {
   switch (action.type) {
+    case ADD_SHIP: {
+      const layout = state.layout.concat({
+        ship: action.ship,
+        positions: action.positions,
+      });
+      return Object.assign({}, state, { layout });
+    }
     case SINK_SHIP_PART: {
       const newState = { ...state };
       newState.layout[action.iShip].positions.splice(action.iPos, 1);
       return newState;
     }
     case GAME_RESET:
-    default:
       return initialState;
+    default:
+      return state;
   }
 };
 
