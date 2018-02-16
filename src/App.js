@@ -21,8 +21,8 @@ const mapStateToProps = (state) => ({
   ships: state.ships,
 });
 const mapDispatchToProps = (dispatch) => ({
+  gameOver: () => dispatch(gameOver()),
   gameReset: () => dispatch(gameReset()),
-  gameOver: (over) => dispatch(gameOver(over)),
   sinkShip: (iShip) => dispatch(sinkShip(iShip)),
   makeShot: (x, y, hit) => dispatch(makeShot(x, y, hit)),
   addShip: (ship, positions) => dispatch(addShip(ship, positions)),
@@ -33,8 +33,9 @@ const mapDispatchToProps = (dispatch) => ({
 class App extends Component {
   componentDidMount() {
     // FIXME: algo for ship placement
-    // this.generateShips();
+    this.generateShips();
   }
+
   checkHit = (x, y) => {
     const { ships, gameOver, sinkShip, sinkShipPart } = this.props;
     let hit = false;
@@ -46,7 +47,7 @@ class App extends Component {
           sinkShipPart(iShip, iPos);
         }
       }));
-    if (this.isGameOver()) gameOver(true);
+    if (this.isGameOver()) gameOver();
     return hit;
   }
 
@@ -61,50 +62,32 @@ class App extends Component {
   getShipBoundaries = (field, coord, shipSize) => {
     const fromX = coord.x ? coord.x - 1 : coord.x;
     const fromY = coord.y ? coord.y - 1 : coord.y;
-    let toX = null;
-    let toY = null;
     if ((shipSize + coord.x) - field.length < 0 && (shipSize + coord.y) - field.length < 0) {
       switch (coord.direction) {
-        case 'row':
-          if (fromX) {
-            if (fromX + shipSize === field.length - 1) {
-              toX = fromX + shipSize;
+        case 'row': {
+          const boundaries = [];
+          for (let row = fromY; row++;) {
+            if (row === field.length) break;
+            for (let col = fromX; col++;) {
+              if (col === field.length) break;
+              boundaries.push([col, row]);
             }
-          } else {
-            toX = fromX + shipSize + 1;
           }
-          if (fromY) {
-            if (fromY === field.length - 2) {
-              toY = fromY+ 1;
+          return boundaries;
+        }
+        case 'col': {
+          const boundaries = [];
+          for (let row = fromY; row++;) {
+            if (row === field.length) break;
+            for (let col = fromX; col++;) {
+              if (col === field.length) break;
+              boundaries.push([col, row]);
             }
-          } else {
-            toY = fromY + 2;
           }
-          break;
-        case 'col':
-          if (fromY) {
-            if (fromY + shipSize === field.length - 1) {
-              toY = fromY + shipSize;
-            }
-          } else {
-            toY = fromY + shipSize + 1;
-          }
-          if (fromX) {
-            if (fromX === field.length - 2) {
-              toX = fromX + 1;
-            }
-          } else {
-            toX = fromX + 2;
-          }
-          break;
+          return boundaries;
+        }
         default:
-          return;
-      }
-      return {
-        toX,
-        toY,
-        fromX,
-        fromY,
+          return false;
       }
     }
     return false;
@@ -114,13 +97,11 @@ class App extends Component {
     const ship = [];
     const shipBoundaries = this.getShipBoundaries(field, coord, shipSize);
     if (!shipBoundaries) return [];
+    for (let b = 0, l = shipBoundaries.length; b < l; b++) {
+      if (field[shipBoundaries[b][1]][shipBoundaries[b][0]]) return [];
+    }
     switch (coord.direction) {
       case 'row': {
-        for (let row = shipBoundaries.fromY; row < shipBoundaries.toY; row++) {
-          for (let col = shipBoundaries.fromX; col < shipBoundaries.toX; col++) {
-            if (field[row][col]) return [];
-          }
-        }
         for (let row = coord.y; row < coord.y + shipSize; row++) {
           field[coord.y][row] = 1;
           ship.push([coord.y, row]);
@@ -128,11 +109,6 @@ class App extends Component {
         return ship;
       }
       case 'col': {
-        for (let row = shipBoundaries.fromY; row < shipBoundaries.toY; row++) {
-          for (let col = shipBoundaries.fromX; col < shipBoundaries.toX; col++) {
-            if (field[row][col]) return [];
-          }
-        }
         for (let col = coord.y; col < coord.y + shipSize; col++) {
           field[col][coord.x] = 1;
           ship.push([col, coord.x]);
@@ -140,7 +116,7 @@ class App extends Component {
         return ship;
       }
       default:
-        break;
+        return [];
     }
   }
 
@@ -151,14 +127,16 @@ class App extends Component {
     let field = array10.map((y) => array10.map((x) => 0));
 
     Object.keys(shipTypes)
-      .map(ship => {
-        let amount = shipTypes[ship].count;
-        const shipSize = shipTypes[ship].size;
-        let shipBody = this.checkIntersections(field, this.getRandomCoord(), shipSize);
-        while (!shipBody.length) {
-          shipBody = this.checkIntersections(field, this.getRandomCoord(), shipSize);
+      .map(shipType => {
+        let amount = shipTypes[shipType].count;
+        const shipSize = shipTypes[shipType].size;
+        while (amount--) {
+          let shipBody = this.checkIntersections(field, this.getRandomCoord(), shipSize);
+          while (!shipBody.length) {
+            shipBody = this.checkIntersections(field, this.getRandomCoord(), shipSize);
+          }
+          addShip(shipType, shipBody);
         }
-        addShip(ship, shipBody);
       });
   }
 

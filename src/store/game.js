@@ -5,7 +5,7 @@ const initialState = { over: false };
 const game = (state = initialState, action) => {
   switch (action.type) {
     case GAME_OVER: {
-      return { over: action.over };
+      return { over: true };
     }
     case GAME_RESET:
       return initialState;
