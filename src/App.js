@@ -60,45 +60,39 @@ class App extends Component {
   }
 
   getShipBoundaries = (field, coord, shipSize) => {
+    let boundaries = [];
+    let rowBoundary = 0, colBoundary = 0;
+    const fieldLength = field.length;
     const fromX = coord.x ? coord.x - 1 : coord.x;
     const fromY = coord.y ? coord.y - 1 : coord.y;
-    if ((shipSize + coord.x) - field.length < 0 && (shipSize + coord.y) - field.length < 0) {
-      switch (coord.direction) {
-        case 'row': {
-          const boundaries = [];
-          for (let row = fromY; row++;) {
-            if (row === field.length) break;
-            for (let col = fromX; col++;) {
-              if (col === field.length) break;
-              boundaries.push([col, row]);
-            }
-          }
-          return boundaries;
-        }
-        case 'col': {
-          const boundaries = [];
-          for (let row = fromY; row++;) {
-            if (row === field.length) break;
-            for (let col = fromX; col++;) {
-              if (col === field.length) break;
-              boundaries.push([col, row]);
-            }
-          }
-          return boundaries;
-        }
-        default:
-          return false;
+    switch (coord.direction) {
+      case 'row': {
+        if ((shipSize + coord.x) - fieldLength >= 0) return [];
+        rowBoundary = coord.y + 1;
+        colBoundary = coord.x + shipSize;
+      }
+      case 'col': {
+        if ((shipSize + coord.y) - fieldLength >= 0) return [];
+        rowBoundary = coord.y + shipSize;
+        colBoundary = coord.x + 1;
       }
     }
-    return false;
+    for (let row = fromY; row < rowBoundary; row++) {
+      if (row === fieldLength) break;
+      for (let col = fromX; col < colBoundary; col++) {
+        if (col === fieldLength) break;
+        boundaries.push([row, col]);
+      }
+    }
+    return boundaries;
   }
 
   checkIntersections = (field, coord, shipSize) => {
     const ship = [];
     const shipBoundaries = this.getShipBoundaries(field, coord, shipSize);
-    if (!shipBoundaries) return [];
+    if (!shipBoundaries.length) return [];
     for (let b = 0, l = shipBoundaries.length; b < l; b++) {
-      if (field[shipBoundaries[b][1]][shipBoundaries[b][0]]) return [];
+      if (field[shipBoundaries[b][0]][shipBoundaries[b][1]]) return [];
     }
     switch (coord.direction) {
       case 'row': {
@@ -124,7 +118,7 @@ class App extends Component {
     const { addShip } = this.props;
     const { shipTypes } = this.props.ships;
     const array10 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    let field = array10.map((y) => array10.map((x) => 0));
+    const field = array10.map((y) => array10.map((x) => 0));
 
     Object.keys(shipTypes)
       .map(shipType => {
@@ -138,6 +132,10 @@ class App extends Component {
           addShip(shipType, shipBody);
         }
       });
+    console.log(
+      field
+        .map(row => `${row.map(cell => cell ? '*' : '-').join('')}\n`).join('')
+    );
   }
 
   isGameOver = () => {
@@ -152,7 +150,7 @@ class App extends Component {
         <div className="game-over" style={{ display: game.over? "flex": "none" }}>
           Game over
           {/* FIXME: dispatch gameReset when if figure out where initialState mutating */}
-          <button onClick={() => window.location.reload()}>
+          <button onClick={() => gameReset()}>
             refresh
           </button>
         </div>

@@ -13,7 +13,7 @@ const Cell = ({ cell, onClick }) => {
       onClick={() => onClick(cell.x, cell.y)}
       className={classNames.join(" ")}
     >
-      {`${cell.x}, ${cell.y}`}
+      {`${cell.y}, ${cell.x}`}
     </div>
   );
 };
