@@ -27,7 +27,7 @@ const ships = (state = initialState, action) => {
       return Object.assign({}, state, { layout });
     }
     case SINK_SHIP_PART: {
-      const newState = { ...state };
+      const newState = Object.create(state);
       newState.layout[action.iShip].positions.splice(action.iPos, 1);
       return newState;
     }

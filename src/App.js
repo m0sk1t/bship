@@ -32,11 +32,10 @@ const mapDispatchToProps = (dispatch) => ({
 
 class App extends Component {
   componentDidMount() {
-    // FIXME: algo for ship placement
     this.generateShips();
   }
 
-  checkHit = (x, y) => {
+  checkHit(x, y) {
     const { ships, gameOver, sinkShip, sinkShipPart } = this.props;
     let hit = false;
     ships.layout  
@@ -51,7 +50,7 @@ class App extends Component {
     return hit;
   }
 
-  getRandomCoord = () => {
+  getRandomCoord() {
     return {
       x: Math.floor(Math.random() * 10),
       y: Math.floor(Math.random() * 10),
@@ -59,27 +58,23 @@ class App extends Component {
     };
   }
 
-  getShipBoundaries = (field, coord, shipSize) => {
-    let boundaries = [];
+  getShipBoundaries(fieldLength, coord, shipSize) {
+    const boundaries = [];
     let rowBoundary = 0, colBoundary = 0;
-    const fieldLength = field.length;
     const fromX = coord.x ? coord.x - 1 : coord.x;
     const fromY = coord.y ? coord.y - 1 : coord.y;
-    switch (coord.direction) {
-      case 'row': {
-        if ((shipSize + coord.x) - fieldLength >= 0) return [];
+    if (coord.direction === 'row' && (shipSize + coord.x) - fieldLength <= 0) {
         rowBoundary = coord.y + 1;
         colBoundary = coord.x + shipSize;
-      }
-      case 'col': {
-        if ((shipSize + coord.y) - fieldLength >= 0) return [];
-        rowBoundary = coord.y + shipSize;
-        colBoundary = coord.x + 1;
-      }
+    } else if (coord.direction === 'col' && (shipSize + coord.y) - fieldLength <= 0) {
+      rowBoundary = coord.y + shipSize;
+      colBoundary = coord.x + 1;
+    } else {
+      return boundaries;
     }
-    for (let row = fromY; row < rowBoundary; row++) {
+    for (let row = fromY; row <= rowBoundary; row++) {
       if (row === fieldLength) break;
-      for (let col = fromX; col < colBoundary; col++) {
+      for (let col = fromX; col <= colBoundary; col++) {
         if (col === fieldLength) break;
         boundaries.push([row, col]);
       }
@@ -87,16 +82,16 @@ class App extends Component {
     return boundaries;
   }
 
-  checkIntersections = (field, coord, shipSize) => {
+  checkIntersections(field, coord, shipSize) {
     const ship = [];
-    const shipBoundaries = this.getShipBoundaries(field, coord, shipSize);
+    const shipBoundaries = this.getShipBoundaries(field.length, coord, shipSize);
     if (!shipBoundaries.length) return [];
-    for (let b = 0, l = shipBoundaries.length; b < l; b++) {
-      if (field[shipBoundaries[b][0]][shipBoundaries[b][1]]) return [];
+    for (let iBound = 0, l = shipBoundaries.length; iBound < l; iBound++) {
+      if (field[shipBoundaries[iBound][0]][shipBoundaries[iBound][1]]) return [];
     }
     switch (coord.direction) {
       case 'row': {
-        for (let row = coord.y; row < coord.y + shipSize; row++) {
+        for (let row = coord.x; row < coord.x + shipSize; row++) {
           field[coord.y][row] = 1;
           ship.push([coord.y, row]);
         }
@@ -114,11 +109,11 @@ class App extends Component {
     }
   }
 
-  generateShips = () => {
+  generateShips() {
     const { addShip } = this.props;
     const { shipTypes } = this.props.ships;
-    const array10 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    const field = array10.map((y) => array10.map((x) => 0));
+    const array10 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const field = array10.map(() => array10.map(() => 0));
 
     Object.keys(shipTypes)
       .map(shipType => {
@@ -132,13 +127,13 @@ class App extends Component {
           addShip(shipType, shipBody);
         }
       });
-    console.log(
-      field
-        .map(row => `${row.map(cell => cell ? '*' : '-').join('')}\n`).join('')
-    );
+    // console.log(
+    //   field
+    //     .map(row => `${row.map(cell => cell ? '# ' : '* ').join('')}\n`).join('')
+    // );
   }
 
-  isGameOver = () => {
+  isGameOver() {
     const { ships } = this.props;
     return ships.layout.map(ship => ship.positions.length).reduce((a, b) => a + b) === 0;
   }
@@ -149,7 +144,7 @@ class App extends Component {
       <div className="App">
         <div className="game-over" style={{ display: game.over? "flex": "none" }}>
           Game over
-          {/* FIXME: dispatch gameReset when if figure out where initialState mutating */}
+          {/* FIXME: dispatch gameReset when figure out where initialState mutating */}
           <button onClick={() => gameReset()}>
             refresh
           </button>
@@ -164,5 +159,17 @@ class App extends Component {
     );
   }
 }
+
+App.propTypes = {
+  game: PropTypes.object,
+  field: PropTypes.array,
+  ships: PropTypes.object,
+  addShip: PropTypes.func,
+  gameOver: PropTypes.func,
+  sinkShip: PropTypes.func,
+  makeShot: PropTypes.func,
+  gameReset: PropTypes.func,
+  sinkShipPart: PropTypes.func,
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

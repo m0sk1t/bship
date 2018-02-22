@@ -11,4 +11,9 @@ const Field = ({ field, onClick }) => (
   </div>
 );
 
+Field.propTypes = {
+  field: PropTypes.array,
+  onClick: PropTypes.func,
+};
+
 export default Field;
